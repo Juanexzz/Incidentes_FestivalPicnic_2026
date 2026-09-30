@@ -5,6 +5,7 @@ import { CrearIncidente } from '../../application/incidentes/CrearIncidente.js';
 import { ActualizarIncidente } from '../../application/incidentes/ActualizarIncidente.js';
 import { EliminarIncidente } from '../../application/incidentes/EliminarIncidente.js';
 import { CambiarEstadoIncidente } from '../../application/incidentes/CambiarEstadoIncidente.js';
+import { ResumenIncidentes } from '../../application/incidentes/ResumenIncidentes.js';
 
 export class IncidenteController {
   constructor(
@@ -13,7 +14,8 @@ export class IncidenteController {
     private readonly crearIncidente: CrearIncidente,
     private readonly actualizarIncidente?: ActualizarIncidente,
     private readonly eliminarIncidente?: EliminarIncidente,
-    private readonly cambiarEstadoIncidente?: CambiarEstadoIncidente
+    private readonly cambiarEstadoIncidente?: CambiarEstadoIncidente,
+    private readonly resumenIncidentes?: ResumenIncidentes
   ) {}
 
   async listar(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -77,6 +79,19 @@ export class IncidenteController {
       }
       const incidente = await this.cambiarEstadoIncidente.execute(req.params.id, req.body);
       res.status(200).json({ data: incidente });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async resumen(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!this.resumenIncidentes) {
+        res.status(501).json({ error: 'No implementado' });
+        return;
+      }
+      const data = await this.resumenIncidentes.execute(req.query);
+      res.status(200).json({ data });
     } catch (error) {
       next(error);
     }

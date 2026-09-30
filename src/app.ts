@@ -9,6 +9,7 @@ import { CrearIncidente } from './application/incidentes/CrearIncidente.js';
 import { ActualizarIncidente } from './application/incidentes/ActualizarIncidente.js';
 import { EliminarIncidente } from './application/incidentes/EliminarIncidente.js';
 import { CambiarEstadoIncidente } from './application/incidentes/CambiarEstadoIncidente.js';
+import { ResumenIncidentes } from './application/incidentes/ResumenIncidentes.js';
 import { IncidenteController } from './interface/controllers/IncidenteController.js';
 import { createIncidenteRouter } from './interface/routes/incidenteRoutes.js';
 import { errorHandler, notFoundHandler } from './interface/middlewares/errorHandler.js';
@@ -28,6 +29,7 @@ const crearIncidente = new CrearIncidente(incidenteRepository, referenciaReposit
 const actualizarIncidente = new ActualizarIncidente(incidenteRepository, referenciaRepository);
 const eliminarIncidente = new EliminarIncidente(incidenteRepository);
 const cambiarEstadoIncidente = new CambiarEstadoIncidente(incidenteRepository);
+const resumenIncidentes = new ResumenIncidentes(incidenteRepository);
 
 const incidenteController = new IncidenteController(
   listarIncidentes,
@@ -35,7 +37,8 @@ const incidenteController = new IncidenteController(
   crearIncidente,
   actualizarIncidente,
   eliminarIncidente,
-  cambiarEstadoIncidente
+  cambiarEstadoIncidente,
+  resumenIncidentes
 );
 
 // Rutas
