@@ -15,6 +15,10 @@ export function esEnteroPositivo(val: unknown): boolean {
   return false;
 }
 
+export function esEnteroPositivoJSON(val: unknown): boolean {
+  return typeof val === 'number' && Number.isInteger(val) && val > 0;
+}
+
 export function validarId(id: unknown, campo = 'id'): number {
   if (!esEnteroPositivo(id)) {
     throw new ValidationError(`El campo "${campo}" debe ser un entero positivo`);

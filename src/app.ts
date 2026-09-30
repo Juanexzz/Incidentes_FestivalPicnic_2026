@@ -5,6 +5,7 @@ import { PrismaIncidenteRepository } from './infrastructure/repositories/PrismaI
 import { PrismaReferenciaRepository } from './infrastructure/repositories/PrismaReferenciaRepository.js';
 import { ListarIncidentes } from './application/incidentes/ListarIncidentes.js';
 import { ObtenerIncidente } from './application/incidentes/ObtenerIncidente.js';
+import { CrearIncidente } from './application/incidentes/CrearIncidente.js';
 import { IncidenteController } from './interface/controllers/IncidenteController.js';
 import { createIncidenteRouter } from './interface/routes/incidenteRoutes.js';
 import { errorHandler, notFoundHandler } from './interface/middlewares/errorHandler.js';
@@ -20,7 +21,12 @@ const referenciaRepository = new PrismaReferenciaRepository();
 
 const listarIncidentes = new ListarIncidentes(incidenteRepository);
 const obtenerIncidente = new ObtenerIncidente(incidenteRepository);
-const incidenteController = new IncidenteController(listarIncidentes, obtenerIncidente);
+const crearIncidente = new CrearIncidente(incidenteRepository, referenciaRepository);
+const incidenteController = new IncidenteController(
+  listarIncidentes,
+  obtenerIncidente,
+  crearIncidente
+);
 
 // Rutas
 app.use('/api/incidentes', createIncidenteRouter(incidenteController));
