@@ -8,8 +8,35 @@ import {
   validarDescripcion
 } from './validaciones.js';
 
+/**
+ * Campos permitidos para modificación parcial según el contrato del Módulo 11:
+ * - asistente_id: entero positivo o null
+ * - zona_id: entero positivo
+ * - severidad: LEVE | MODERADA | GRAVE
+ * - descripcion: string (10 a 500 caracteres)
+ */
 const CAMPOS_EDITABLES = ['asistente_id', 'zona_id', 'severidad', 'descripcion'] as const;
 
+/**
+ * Caso de uso: ActualizarIncidente (PATCH /api/incidentes/:id)
+ *
+ * Flujo de validaciones y ejecución:
+ * 1. Formato y tipo del ID en parámetros de ruta (entero positivo -> 400).
+ * 2. Formato del cuerpo JSON:
+ *    - Debe ser un objeto no nulo y no arreglo.
+ *    - Lista blanca de campos editables: cualquier propiedad no editable o desconocida -> 400.
+ *    - Validación de tipo y valor de cada campo enviado (zona_id > 0, descripcion 10-500, severidad válida).
+ *    - Un body vacío `{}` es válido (no modifica campos).
+ * 3. Existencia del registro activo:
+ *    - Consulta el repositorio de incidentes por ID y state='ACTIVE'.
+ *    - Si no existe o tiene state='REMOVED' -> 404.
+ * 4. Punto de extensión para la sesión 2:
+ *    - Regla de negocio 2: Si el estado actual es 'CERRADO', no se permite edición (409).
+ * 5. Existencia de entidades foráneas:
+ *    - Si viene zona_id, debe existir en la tabla zonas -> 404.
+ *    - Si viene asistente_id (y no es null), debe existir en la tabla asistentes -> 404.
+ * 6. Actualización en repositorio y retorno de entidad de dominio.
+ */
 export class ActualizarIncidente {
   constructor(
     private readonly incidenteRepository: IncidenteRepository,
