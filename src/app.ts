@@ -4,6 +4,7 @@ import cors from 'cors';
 import { PrismaIncidenteRepository } from './infrastructure/repositories/PrismaIncidenteRepository.js';
 import { PrismaReferenciaRepository } from './infrastructure/repositories/PrismaReferenciaRepository.js';
 import { ListarIncidentes } from './application/incidentes/ListarIncidentes.js';
+import { ObtenerIncidente } from './application/incidentes/ObtenerIncidente.js';
 import { IncidenteController } from './interface/controllers/IncidenteController.js';
 import { createIncidenteRouter } from './interface/routes/incidenteRoutes.js';
 import { errorHandler, notFoundHandler } from './interface/middlewares/errorHandler.js';
@@ -18,7 +19,8 @@ const incidenteRepository = new PrismaIncidenteRepository();
 const referenciaRepository = new PrismaReferenciaRepository();
 
 const listarIncidentes = new ListarIncidentes(incidenteRepository);
-const incidenteController = new IncidenteController(listarIncidentes);
+const obtenerIncidente = new ObtenerIncidente(incidenteRepository);
+const incidenteController = new IncidenteController(listarIncidentes, obtenerIncidente);
 
 // Rutas
 app.use('/api/incidentes', createIncidenteRouter(incidenteController));
