@@ -1,6 +1,6 @@
 import { Incidente } from '../../domain/entities.js';
 import { IncidenteRepository, ReferenciaRepository, ModificarIncidenteDTO } from '../../domain/repositories.js';
-import { ValidationError, NotFoundError } from '../../domain/errors.js';
+import { ValidationError, NotFoundError, ConflictError } from '../../domain/errors.js';
 import {
   validarId,
   esEnteroPositivoJSON,
@@ -30,8 +30,9 @@ const CAMPOS_EDITABLES = ['asistente_id', 'zona_id', 'severidad', 'descripcion']
  * 3. Existencia del registro activo:
  *    - Consulta el repositorio de incidentes por ID y state='ACTIVE'.
  *    - Si no existe o tiene state='REMOVED' -> 404.
- * 4. Punto de extensión para la sesión 2:
- *    - Regla de negocio 2: Si el estado actual es 'CERRADO', no se permite edición (409).
+ * 4. Regla de negocio 2:
+ *    - Un incidente en estado 'CERRADO' no se puede editar -> 409 (solo si el body es válido).
+ *    - Incidentes en estado 'ABIERTO' o 'EN_ATENCION' sí se pueden editar.
  * 5. Existencia de entidades foráneas:
  *    - Si viene zona_id, debe existir en la tabla zonas -> 404.
  *    - Si viene asistente_id (y no es null), debe existir en la tabla asistentes -> 404.
@@ -97,12 +98,12 @@ export class ActualizarIncidente {
       throw new NotFoundError(`Incidente con id ${id} no encontrado`);
     }
 
-    // [PUNTO DE EXTENSIÓN - SESIÓN 2]: Regla de negocio 2 -> "Un incidente CERRADO no se edita (409)"
-    // if (incidenteActual.estado === 'CERRADO') {
-    //   throw new ConflictError('Un incidente CERRADO no se puede editar');
-    // }
+    // 4. Regla de negocio 2: Un incidente CERRADO no se edita (409)
+    if (incidenteActual.estado === 'CERRADO') {
+      throw new ConflictError('Un incidente CERRADO no se puede editar');
+    }
 
-    // 4. 404 de referencias foráneas si vienen en la petición
+    // 5. 404 de referencias foráneas si vienen en la petición
     if (updateDTO.zona_id !== undefined) {
       const existeZona = await this.referenciaRepository.existeZona(updateDTO.zona_id);
       if (!existeZona) {
@@ -117,7 +118,7 @@ export class ActualizarIncidente {
       }
     }
 
-    // 5. Actualiza con el repositorio
+    // 6. Actualiza con el repositorio
     return await this.incidenteRepository.update(id, updateDTO);
   }
 }
