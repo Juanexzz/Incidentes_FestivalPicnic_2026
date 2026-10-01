@@ -138,7 +138,6 @@ src/
 
 ## 📋 Regla de Negocio: Transiciones de Estado
 
-<!-- REESCRIBIR CON MIS PALABRAS -->
 ### Descripción Técnica de la Regla
 El ciclo de vida de atención médica de un incidente debe cumplir una máquina de estados unidireccional y secuencial estricta:
 $$\text{ABIERTO} \longrightarrow \text{EN\_ATENCION} \longrightarrow \text{CERRADO}$$
@@ -152,6 +151,12 @@ $$\text{ABIERTO} \longrightarrow \text{EN\_ATENCION} \longrightarrow \text{CERRA
    - **Retroceder:** Pasar de `EN_ATENCION` a `ABIERTO` dispara un `ConflictError` (409).
    - **Repetición:** Intentar asignar el mismo estado actual (`ABIERTO` → `ABIERTO`, `EN_ATENCION` → `EN_ATENCION`) dispara un `ConflictError` (409).
    - **Estado final:** Un incidente en estado `CERRADO` es terminal; cualquier intento de cambio a cualquier otro estado o repetición dispara un `ConflictError` (409).
+
+### 💡 Interpretación y Explicación del Estudiante (Cómo entendí la regla)
+
+Desde mi punto de vista como estudiante de backend, esta regla modela con fidelidad la logística real de atención prehospitalaria en festivales masivos: una persona accidentada o descompensada no puede aparecer como atendida y dada de alta por arte de magia si un socorrista no ha tomado el caso primero, ni tampoco tendría sentido clínico "des-atenderla" regresándola a abierta cuando la brigada ya se encuentra en el lugar interviniendo. Por ello, entendí que el ciclo debía concebirse como una línea temporal irreversible (`ABIERTO` $\rightarrow$ `EN_ATENCION` $\rightarrow$ `CERRADO`), garantizando que la operación médica mantenga un flujo formal, seguro y sin saltos que pongan en riesgo la trazabilidad del paciente.
+
+En el diseño técnico, entendí que infringir este flujo no representa un simple error sintáctico del cliente (como lo sería enviar un texto o un campo no reconocido, que amerita un 400), sino una contradicción directa frente al estado actual del recurso en el servidor, justificando con claridad el uso del código semántico HTTP 409 (Conflict). Para cumplir con los principios de arquitectura limpia, encapsulé esta lógica como una función pura dentro de la capa de Dominio, permitiendo validar todas las transiciones posibles de manera determinista y aislada antes de tocar cualquier tabla o persistencia en la base de datos.
 
 #### Archivo de implementación real:
 - [`src/domain/transiciones.ts`](file:///src/domain/transiciones.ts): Implementada como función pura `validarTransicionEstado(estadoActual: string, nuevoEstado: string): void`.
@@ -171,4 +176,4 @@ $$\text{ABIERTO} \longrightarrow \text{EN\_ATENCION} \longrightarrow \text{CERRA
   - `PATCH /api/incidentes/:id/estado body inválido con id inexistente responde 400 (valida body antes que 404)`
   - `PATCH /api/incidentes/999999/estado con estado válido responde 404 (id inexistente)`
   - `Transiciones de estado: ciclo completo y restricciones 409 en dia 2` (prueba exhaustiva del ciclo `ABIERTO → CERRADO (409)`, `ABIERTO → ABIERTO (409)`, `ABIERTO → EN_ATENCION (200)`, `EN_ATENCION → ABIERTO (409)`, `EN_ATENCION → EN_ATENCION (409)`, `EN_ATENCION → CERRADO (200)` y `CERRADO → cualquiera (409)`).
-<!-- REESCRIBIR CON MIS PALABRAS -->
+
